@@ -39,11 +39,11 @@ class Request:
 
 class ElevatorObserver(ABC):
     @abstractmethod
-    def update(self, elevator):
+    def update(self, elevator: 'Elevator'):
         pass
 
 class Display(ElevatorObserver):
-    def update(self, elevator):
+    def update(self, elevator: 'Elevator'):
         print(f"[DISPLAY] Elevator {elevator.get_id()} | Current Floor: {elevator.get_current_floor()} | Direction: {elevator.get_direction().value}")
 
 
@@ -312,8 +312,6 @@ class ElevatorSystem:
 class ElevatorSystemDemo:
     @staticmethod
     def main():
-        import sys
-        
         # Setup: A building with 2 elevators
         num_elevators = 2
         # The get_instance method now initializes the elevators and attaches the Display (Observer).
@@ -348,7 +346,7 @@ class ElevatorSystemDemo:
         elevator_system.select_floor(2, 1)
 
         # Let the simulation run for a while to observe the display updates
-        print("\n--- Letting simulation run for 1 second ---")
+        print("\n--- Letting simulation run for 10 second ---")
         time.sleep(10)
 
         # Shutdown the system
