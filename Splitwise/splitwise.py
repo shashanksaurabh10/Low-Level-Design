@@ -214,73 +214,73 @@ class Expense:
                 raise ValueError("Split strategy is required.")
             return Expense(self)
         
-class SplitService:
+class SplitwiseService:
     _instance = None
     _lock = threading.Lock()
-
+    
     def __new__(cls):
-        if cls._instance is not None:
+        if cls._instance is None:
             with cls._lock:
-                if cls._instance is not None:
+                if cls._instance is None:
                     cls._instance = super().__new__(cls)
                     cls._instance._initialized = False
         return cls._instance
-
+    
     def __init__(self):
         if not self._initialized:
             self._users: Dict[str, User] = {}
             self._groups: Dict[str, Group] = {}
             self._initialized = True
-
+    
     @classmethod
     def get_instance(cls):
         return cls()
     
-    def add_user(self, name: str, email: str):
+    def add_user(self, name: str, email: str) -> User:
         user = User(name, email)
         self._users[user.get_id()] = user
         return user
     
-    def add_group(self, name:str, members: List[User]):
+    def add_group(self, name: str, members: List[User]) -> Group:
         group = Group(name, members)
-        self._groups(group.get_id()) = group
+        self._groups[group.get_id()] = group
         return group
     
-    def get_user(self, user_id: str):
+    def get_user(self, user_id: str) -> Optional[User]:
         return self._users.get(user_id)
     
-    def get_group(self, group_id: str):
+    def get_group(self, group_id: str) -> Optional[Group]:
         return self._groups.get(group_id)
     
     def create_expense(self, builder: Expense.ExpenseBuilder):
         with self._lock:
             expense = builder.build()
             paid_by = expense.get_paid_by()
-
+            
             for split in expense.get_splits():
                 participant = split.get_user()
                 amount = split.get_amount()
-
+                
                 if paid_by != participant:
                     paid_by.get_balance_sheet().adjust_balance(participant, amount)
                     participant.get_balance_sheet().adjust_balance(paid_by, -amount)
             
             print(f"Expense '{expense.get_description()}' of amount {expense.get_amount()} created.")
-
+    
     def settle_up(self, payer_id: str, payee_id: str, amount: float):
         with self._lock:
             payer = self._users[payer_id]
             payee = self._users[payee_id]
-
             print(f"{payer.get_name()} is settling up {amount} with {payee.get_name()}")
-
+            
+            # Settlement is like a reverse expense. payer owes less to payee.
             payee.get_balance_sheet().adjust_balance(payer, -amount)
             payer.get_balance_sheet().adjust_balance(payee, amount)
-
-    def show_balance_sheet(self, user_id:str):
+    
+    def show_balance_sheet(self, user_id: str):
         user = self._users[user_id]
         user.get_balance_sheet().show_balances()
-
+    
     def simplify_group_debts(self, group_id: str) -> List[Transaction]:
         group = self._groups.get(group_id)
         if group is None:
@@ -321,4 +321,82 @@ class SplitService:
             if abs(debtors[j][1]) < 0.01:
                 j += 1
         
-        return transactions 
+        return transactions
+    
+class SplitwiseDemo:
+    @staticmethod
+    def main():
+        service = SplitwiseService.get_instance()
+
+        alice = service.add_user("Alice", "alice@a.com")
+        bob = service.add_user("Bob", "bob@b.com")
+        charlie = service.add_user("Charlie", "charlie@c.com")
+        david = service.add_user("David", "david@d.com")
+
+        friends_group = service.add_group("Friends Trip", [alice, bob, charlie, david])
+
+        print("------System setup Complete -----------")
+
+        print("------- Use case 1: Equal Split --------")
+        service.create_expense(Expense.ExpenseBuilder()
+                               .set_description("Dinner")
+                               .set_amount(1000)
+                               .set_paid_by(alice)
+                               .set_participants([alice, bob, charlie, david])
+                               .set_split_strategy(EqualSplitStrategy()))
+        
+        service.show_balance_sheet(alice.get_id())
+        service.show_balance_sheet(bob.get_id())
+        print()
+
+        print("--- Use Case 2: Exact Split ---")
+        service.create_expense(Expense.ExpenseBuilder()
+                              .set_description("Movie Tickets")
+                              .set_amount(370)
+                              .set_paid_by(alice)
+                              .set_participants([bob, charlie])
+                              .set_split_strategy(ExactSplitStrategy())
+                              .set_split_values([120.0, 250.0]))
+        
+        service.show_balance_sheet(alice.get_id())
+        service.show_balance_sheet(bob.get_id())
+        print()
+
+        print("--- Use Case 3: Percentage Split ---")
+        service.create_expense(Expense.ExpenseBuilder()
+                              .set_description("Groceries")
+                              .set_amount(500)
+                              .set_paid_by(david)
+                              .set_participants([alice, bob, charlie])
+                              .set_split_strategy(PercentageSplitStrategy())
+                              .set_split_values([40.0, 30.0, 30.0]))  # 40%, 30%, 30%
+        
+        print("--- Balances After All Expenses ---")
+        service.show_balance_sheet(alice.get_id())
+        service.show_balance_sheet(bob.get_id())
+        service.show_balance_sheet(charlie.get_id())
+        service.show_balance_sheet(david.get_id())
+        print()
+
+        print("--- Use Case 4: Simplify Group Debts for 'Friends Trip' ---")
+        simplified_debts = service.simplify_group_debts(friends_group.get_id())
+        if not simplified_debts:
+            print("All debts are settled within the group!")
+        else:
+            for debt in simplified_debts:
+                print(debt)
+        print()
+
+        service.show_balance_sheet(bob.get_id())
+        
+        # 7. Use Case 5: Partial Settlement
+        print("--- Use Case 5: Partial Settlement ---")
+        # From the simplified debts, we see Bob should pay Alice. Let's say Bob pays 100.
+        service.settle_up(bob.get_id(), alice.get_id(), 100)
+        
+        print("--- Balances After Partial Settlement ---")
+        service.show_balance_sheet(alice.get_id())
+        service.show_balance_sheet(bob.get_id())
+
+if __name__ == "__main__":
+    SplitwiseDemo.main()
