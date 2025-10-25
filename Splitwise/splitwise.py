@@ -35,7 +35,7 @@ class User:
 class BalanceSheet:
     def __init__(self, owner: User):
         self._owner = owner
-        self._balances: Dict[User: float] = {}
+        self._balances: Dict[User, float] = {}
         self._lock = threading.Lock()
 
     def get_balances(self):
@@ -135,7 +135,7 @@ class PercentageSplitStrategy(SplitStrategy):
     def calculate_splits(self, total_amount: float, paid_by: User, participants: List[User], split_values: Optional[List[float]]) -> List[Split]:
         if len(participants) != len(split_values):
             raise ValueError("Number of participants and split values must match")
-        if abs(sum(split_values)-100.0 > 0.01):
+        if abs(sum(split_values)-100.0) > 0.01:
             raise ValueError("Sum of percentage must of 100.")
         
         splits = []
