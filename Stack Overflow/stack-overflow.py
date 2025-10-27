@@ -68,7 +68,6 @@ class Event:
     def get_target_post(self):
         return self.target_post
 
-
 class PostObserver(ABC):
     @abstractmethod
     def on_post_event(self, event: Event):
@@ -201,7 +200,6 @@ class Answer(Post):
 
     def is_accepted_answer(self) -> bool:
         return self.is_accepted
-
 
 class Comment(Content):
     def __init__(self, body: str, author: User):
