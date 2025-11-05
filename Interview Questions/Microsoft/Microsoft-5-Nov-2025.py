@@ -19,7 +19,7 @@ def reverse_words_keep_punctuations(sentence: str) -> str:
     current = []
     
     for ch in sentence:
-        if ch.isalnum() or ch == "'":
+        if ch.isalnum():
             current.append(ch)
         else:
             if current:
@@ -27,7 +27,6 @@ def reverse_words_keep_punctuations(sentence: str) -> str:
                 current = []
     if current:
         words.append(''.join(current))
-    print(words)
     
     # Step 2: Reverse words
     reversed_words = words[::-1]
@@ -37,11 +36,11 @@ def reverse_words_keep_punctuations(sentence: str) -> str:
     word_index = 0
     i = 0
     while i < len(sentence):
-        if sentence[i].isalnum() or sentence[i] == "'":
+        if sentence[i].isalnum():
             # Start of a word
             # Find word length
             j = i
-            while j < len(sentence) and (sentence[j].isalnum() or sentence[j] == "'"):
+            while j < len(sentence) and sentence[j].isalnum():
                 j += 1
             # Replace this word with reversed one
             result.append(reversed_words[word_index])
