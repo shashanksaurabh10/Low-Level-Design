@@ -63,7 +63,7 @@ print(reverse_words_keep_punctuations('Well, she exclaimed "Oh No!".'))
 # -------------------------------------------
 # Round - 2
 
-# Question - https://leetcode.com/problems/two-city-scheduling/description/
+# Question 1 - https://leetcode.com/problems/two-city-scheduling/description/
 
 # A company is planning to interview 2n people. Given the array costs where costs[i] = [aCosti, bCosti], 
 # the cost of flying the ith person to city a is aCosti, and the cost of flying the ith person to city b is bCosti.
@@ -82,3 +82,35 @@ def min_cost(cost):
             total_cost += cost[i][1]  # Send to city2
             
     return total_cost
+
+# Question - 2
+
+# Given a matrix mat[][] and an integer x, the task is to check if x is present in mat[][] or not.
+# Every row and column of the matrix is sorted in increasing order.
+
+def matSearch(mat, x):
+    n = len(mat)
+    m = len(mat[0])
+    i = 0
+    j = m - 1
+
+    while i < n and j >= 0:
+        if x > mat[i][j]:
+            i += 1
+        elif x < mat[i][j]:
+            j -= 1
+        else:
+            return True
+    return False
+
+if __name__ == "__main__":
+    mat = [
+        [3, 30, 38],
+        [20, 52, 54],
+        [35, 60, 69]
+    ]
+    x = 35
+    if matSearch(mat, x):
+        print("true")
+    else:
+        print("false")
