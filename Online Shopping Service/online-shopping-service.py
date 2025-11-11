@@ -191,3 +191,98 @@ class Account:
     def get_cart(self):
         return self.cart
     
+class OrderObserver(ABC):
+    @abstractmethod
+    def update(self, order: 'Order'):
+        pass
+
+class Subject:
+    def __init__(self):
+        self.observers: List[OrderObserver] = []
+
+    def add_observer(self, observer: OrderObserver):
+        self.observers.append(observer)
+
+    def remove_observer(self, observer: OrderObserver):
+        if observer in self.observers:
+            self.observers.remove(observer)
+        
+    def notify_observer(self, order: 'Order'):
+        for observer in self.observers:
+            observer.update(order)
+
+class OrderLineItem:
+    def __init__(self, product_id: str, product_name: str, quantity: int, price_at_purchase: float):
+        self.product_id = product_id
+        self.product_name = product_name
+        self.quantity = quantity
+        self.price_at_purchase = price_at_purchase
+
+    def get_product_id(self):
+        return self.product_id
+    
+    def get_quantity(self):
+        return self.quantity
+    
+class OrderState(ABC):
+    @abstractmethod
+    def ship(self, order: 'Order'):
+        pass
+
+    @abstractmethod
+    def deliver(self, order: 'Order'):
+        pass
+
+    @abstractmethod
+    def cancel(self, order: 'Order'):
+        pass
+
+class PlacedState(OrderState):
+    def ship(self, order: 'Order'):
+        print(f"Shipping order {order.get_id()}")
+        order.set_status(OrderStatus.SHIPPED)
+        order.set_state(ShippedState())
+
+    def deliver(self, order: 'Order'):
+        print(f"Cannot deliver an order that has not been shipped.")
+
+    def cancel(self, order: 'Order'):
+        print(f"Cancelling order {order.get_id()}")
+        order.set_status(OrderStatus.CANCELLED)
+        order.set_state(CancelledState())
+
+class ShippedState(OrderState):
+    def ship(self, order: 'Order') -> None:
+        print("Order is already shipped.")
+
+    def deliver(self, order: 'Order') -> None:
+        print(f"Delivering order {order.get_id()}")
+        order.set_status(OrderStatus.DELIVERED)
+        order.set_state(DeliveredState())
+
+    def cancel(self, order: 'Order') -> None:
+        print("Cannot cancel a shipped order.")
+
+class DeliveredState(OrderState):
+    def ship(self, order: 'Order') -> None:
+        print("Order already delivered.")
+
+    def deliver(self, order: 'Order') -> None:
+        print("Order already delivered.")
+
+    def cancel(self, order: 'Order') -> None:
+        print("Cannot cancel a delivered order.")
+
+class CancelledState(OrderState):
+    def ship(self, order: 'Order') -> None:
+        print("Cannot ship a cancelled order.")
+
+    def deliver(self, order: 'Order') -> None:
+        print("Cannot deliver a cancelled order.")
+
+    def cancel(self, order: 'Order') -> None:
+        print("Order is already cancelled.")
+
+class Order(Subject):
+    def __init__(self):
+        super().__init__()
