@@ -211,6 +211,32 @@ class Subject:
         for observer in self.observers:
             observer.update(order)
 
+class Customer(OrderObserver):
+    def __init__(self, name: str, email: str, password: str, shipping_address: Address):
+        self.id = str(uuid.uuid4())
+        self.name = name
+        self.email = email
+        self.account = Account(email, password)
+        self.shipping_address = shipping_address
+
+    def update(self, order: 'Order'):
+        print(f"[Notification for {self.name}]: Your order #{order.get_id()} status has been updated to: {order.get_status().value}.")
+
+    def get_id(self) -> str:
+        return self.id
+
+    def get_name(self) -> str:
+        return self.name
+
+    def get_account(self) -> 'Account':
+        return self.account
+
+    def get_shipping_address(self) -> Address:
+        return self.shipping_address
+
+    def set_shipping_address(self, address: Address) -> None:
+        self.shipping_address = address 
+
 class OrderLineItem:
     def __init__(self, product_id: str, product_name: str, quantity: int, price_at_purchase: float):
         self.product_id = product_id
@@ -284,5 +310,5 @@ class CancelledState(OrderState):
         print("Order is already cancelled.")
 
 class Order(Subject):
-    def __init__(self):
+    def __init__(self, customer: Customer, items: List[OrderLineItem], shipping_address: Address, total_amount: float):
         super().__init__()
